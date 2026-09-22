@@ -1,0 +1,445 @@
+/* 小情绪收容所 - 样式
+ *
+ * 视觉基调：深夜的小房间。暖色低饱和、方形硬边、大留白、慢缓动。
+ * 明确避开：圆角卡片、渐变按钮、投影堆叠、进度环、成就弹窗。
+ * 所有 UI 装饰都是「像素界面」的语言——直角、硬边、轻微斜角高光，
+ * 而不是现代 web 的柔和阴影。
+ */
+
+:root {
+  --bg:        #14121c;
+  --panel:     #1e1b29;
+  --panel-2:   #252134;
+  --line:      #3f3856;
+  --line-soft: #322d45;
+  --ink:       #e8e2d2;
+  --ink-dim:   #9a92ad;
+  --ink-faint: #6c6580;
+  --warm:      #d9a05b;
+  --warm-lit:  #eabd80;
+  --warm-dim:  #8a6a42;
+
+  /* 这三个是「带情绪」的颜色，没法从上面那批推导出来，所以单独拎出来跟着时刻走 */
+  --glow:         radial-gradient(120% 80% at 50% 0%, rgba(217,160,91,0.05), transparent 70%);
+  --bubble-bg:    #2c2740;
+  --bubble-edge:  inset -2px -2px 0 rgba(0,0,0,.3), inset 2px 2px 0 rgba(255,255,255,.05);
+  --vignette:     inset 0 0 60px rgba(0,0,0,0.45);
+
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+          "Source Han Sans SC", system-ui, sans-serif;
+}
+
+/* 白天：柔和的白天，低饱和暖白——透过窗帘的自然光，不是拉开灯的白光。
+   注意 --warm-lit 在这里比 --warm 深：夜里「lit」是提亮，白底上提亮会掉对比，
+   所以白天的强调色一律是加深。 */
+[data-phase="day"] {
+  --bg:        #f0e9dc;
+  --panel:     #e7dfcd;
+  --panel-2:   #dbd1bc;
+  --line:      #b0a48b;
+  --line-soft: #cfc4ae;
+  --ink:       #3b352a;
+  --ink-dim:   #6d6555;
+  --ink-faint: #948b79;
+  --warm:      #c4843c;
+  --warm-lit:  #a86a28;
+  --warm-dim:  #b0824c;
+
+  --glow:         radial-gradient(120% 80% at 50% 0%, rgba(255,244,220,0.55), transparent 70%);
+  --bubble-bg:    #f8f2e5;
+  --bubble-edge:  inset -2px -2px 0 rgba(150,132,98,.22), inset 2px 2px 0 rgba(255,255,255,.75);
+  --vignette:     inset 0 0 60px rgba(122,102,70,0.16);
+}
+
+/* 黄昏：夜和昼之间那一段，整体偏暖。 */
+[data-phase="dusk"] {
+  --bg:        #2a2030;
+  --panel:     #342739;
+  --panel-2:   #3d2e44;
+  --line:      #54415c;
+  --line-soft: #46364f;
+  --ink:       #f0e4d4;
+  --ink-dim:   #b09aab;
+  --ink-faint: #7d6a80;
+  --warm:      #e8a45e;
+  --warm-lit:  #f5b972;
+  --warm-dim:  #a87548;
+
+  --glow:         radial-gradient(120% 80% at 50% 0%, rgba(232,164,94,0.09), transparent 70%);
+  --bubble-bg:    #3a2e42;
+  --bubble-edge:  inset -2px -2px 0 rgba(0,0,0,.3), inset 2px 2px 0 rgba(255,220,180,.07);
+  --vignette:     inset 0 0 60px rgba(0,0,0,0.34);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.9;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 房间本身是暗的，页面再压一层极淡的暖光，让整个屏幕像一个房间而不是一张网页。
+   白天这层换成偏冷的自然光——夜里是「灯从下面照上来」，白天是「窗外的光」，
+   两者都不是装饰，是让页面有方向感的。 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: var(--glow);
+}
+
+/* 跨时刻时颜色是渐变过去的，不是闪断。.btn / .chip 有自己的 hover 过渡，不列在这里，
+   否则 hover 会从 0.2 秒被拉成 0.8 秒。 */
+html, body, .panel, .stage, .bubble, .weather, textarea, .entries .replied, .foot {
+  transition: background-color .8s ease, color .8s ease, border-color .8s ease, box-shadow .8s ease;
+}
+
+canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+
+a { color: var(--ink-dim); text-decoration: none; }
+a:hover { color: var(--warm-lit); }
+
+.app {
+  position: relative;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 20px 18px 40px;
+}
+
+/* ---- 顶栏 ---------------------------------------------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+}
+
+.brand {
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  color: var(--ink-dim);
+}
+.brand:hover { color: var(--ink); }
+
+.topnav { display: flex; gap: 18px; font-size: 13px; letter-spacing: 0.08em; }
+.topnav a.on { color: var(--warm); }
+
+/* ---- 房间 ---------------------------------------------------------------- */
+
+.stage {
+  position: relative;
+  width: 100%;
+  /* 4/3 而不是宽扁的比例：猫头顶上方要留得下一段对话气泡，否则气泡只能压在
+     猫脸上或者被裁掉。max-height 给得宽一些——压得太狠会把房间挤成又宽又扁，
+     墙就没了，气泡跟着没地方放。 */
+  aspect-ratio: 4 / 3;
+  max-height: 70vh;
+  border: 2px solid var(--line);
+  overflow: hidden;
+  /* 房间四角的暗角，像镜头边缘的光衰减。白天要浅得多，否则亮房间里套着一个黑框 */
+  box-shadow: var(--vignette);
+}
+
+#room, #pet { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* 垃圾桶：只有进垃圾桶页才出现，滑上来，不是弹出来。
+   贴右边缘锚定而不是按百分比定位左边——按左边定位会和窗户撞上，而且窗口一变
+   就撞得更厉害。bottom 8% 让桶底正好落在地板线（92%）上，不是浮在半空。 */
+.bin {
+  position: absolute;
+  right: 8%;
+  bottom: 8%;
+  width: 48px;
+  height: 44px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease;
+  pointer-events: none;
+}
+.bin.show { opacity: 1; transform: translateY(0); }
+
+/* ---- 对话气泡 ------------------------------------------------------------ */
+
+/* 气泡钉在房间上方、水平居中，尾巴朝下指着猫。不做「挂在猫头顶」的跟随定位：
+   猫头顶到房间上沿的距离随窗口尺寸变化，挂在头顶就得在放不下时翻到猫下面，
+   而翻下去又会撞到地板。钉在上方则任何尺寸都成立。 */
+.bubble {
+  position: absolute;
+  left: 50%;
+  max-width: 84%;
+  padding: 12px 16px;
+  background: var(--bubble-bg);
+  border: 2px solid var(--line);
+  box-shadow: var(--bubble-edge);
+  font-size: 14.5px;
+  line-height: 1.95;
+  color: var(--ink);
+  transform: translateX(-50%);
+  z-index: 5;
+  /* 停留时间到了就淡掉，而不是啪地消失。时长要和 app.js 的 BUBBLE_FADE_MS 对齐 */
+  transition: opacity .8s ease;
+}
+/* 淡掉之后内容仍留在 DOM 里——点小屋能原样再浮现，所以这里不能用 display:none，
+   只把不透明度压掉并让点击穿过去（穿过去正好还能摸到猫）。 */
+.bubble.gone { opacity: 0; pointer-events: none; }
+/* 行数多、房间又矮时收紧行距，让气泡不至于压到猫耳朵上 */
+.bubble.tight { font-size: 13px; line-height: 1.7; padding: 10px 13px; }
+
+/* 气泡的小尾巴，朝下 */
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  margin-left: -6px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid var(--line);
+}
+
+/* 一行一行地浮现。文案的呼吸感（短句、留白、分行）本身就是这个产品的一部分，
+   一次性糊上去就没了，所以每行之间有停顿。 */
+.bubble .ln {
+  display: block;
+  opacity: 0;
+  transform: translateY(4px);
+  animation: rise .55s ease forwards;
+}
+@keyframes rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bubble .bubble-close {
+  display: block;
+  margin-top: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.bubble .bubble-close:hover { color: var(--warm); }
+
+/* ---- 面板与视图 ---------------------------------------------------------- */
+
+.panel { padding-top: 22px; }
+.view { animation: fade .5s ease; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+.greet {
+  margin: 0 0 2px;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+}
+.sub { margin: 0 0 22px; color: var(--ink-dim); }
+.whisper {
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--ink-faint);
+  line-height: 1.9;
+}
+
+/* ---- 按钮 ---------------------------------------------------------------- */
+
+.btn {
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: #241d12;
+  background: var(--warm);
+  border: 2px solid var(--warm);
+  padding: 10px 22px;
+  cursor: pointer;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,.18), inset 2px 2px 0 rgba(255,255,255,.22);
+  transition: background .25s ease, border-color .25s ease;
+}
+.btn:hover { background: var(--warm-lit); border-color: var(--warm-lit); }
+.btn:active { box-shadow: inset 2px 2px 0 rgba(0,0,0,.2); }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.link {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 6px 2px;
+  cursor: pointer;
+}
+.link:hover { color: var(--ink-dim); }
+
+.row { display: flex; align-items: center; gap: 18px; margin-top: 20px; flex-wrap: wrap; }
+
+/* ---- 输入 ---------------------------------------------------------------- */
+
+.ask { display: block; margin-bottom: 10px; color: var(--ink-dim); }
+
+textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 15.5px;
+  line-height: 1.95;
+  color: var(--ink);
+  background: var(--panel);
+  border: 2px solid var(--line);
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 108px;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,.28);
+}
+textarea::placeholder { color: var(--ink-faint); }
+textarea:focus { outline: none; border-color: var(--warm-dim); }
+
+/* ---- 心情 ---------------------------------------------------------------- */
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+.chip {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink-dim);
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+.chip:hover { color: var(--ink); border-color: var(--line); }
+.chip.on {
+  color: #241d12;
+  background: var(--warm);
+  border-color: var(--warm);
+}
+
+.hint { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-faint); }
+
+/* 纸团被抽走时，输入区塌下去。按钮留在原地，只是禁用。 */
+#view-bin textarea,
+#view-bin .ask,
+#view-bin .chips,
+#view-bin .hint {
+  transition: opacity .45s ease, transform .45s ease;
+}
+#view-bin.collapsing textarea,
+#view-bin.collapsing .ask,
+#view-bin.collapsing .chips,
+#view-bin.collapsing .hint {
+  opacity: 0;
+  transform: translateY(-8px) scaleY(.6);
+  pointer-events: none;
+}
+
+/* ---- 小情绪天气 ---------------------------------------------------------- */
+
+.weather {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 2px solid var(--line-soft);
+  font-size: 14px;
+  color: var(--ink-dim);
+  margin-bottom: 22px;
+}
+.weather .w { white-space: nowrap; }
+.weather .w b { color: var(--ink); font-weight: normal; }
+
+.entries { list-style: none; margin: 0; padding: 0; }
+
+.entries li {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.entries li:last-child { border-bottom: 0; }
+
+.entries .meta {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  margin-bottom: 7px;
+}
+.entries .said { color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+.entries .said.empty { color: var(--ink-faint); font-style: normal; }
+.entries .replied {
+  margin-top: 9px;
+  padding-left: 12px;
+  border-left: 2px solid var(--warm-dim);
+  color: var(--ink-dim);
+  font-size: 14.5px;
+}
+.entries .del {
+  float: right;
+  background: none; border: 0; padding: 0 2px;
+  font: inherit; font-size: 12px; color: var(--ink-faint); cursor: pointer;
+}
+.entries .del:hover { color: var(--warm); }
+
+/* ---- 纸团与星星 ---------------------------------------------------------- */
+
+/* 纸团在视口坐标系里飞，用 position:fixed，这样它能从输入框一路飞进桶里，
+   不会被 stage 的 overflow 裁掉。居中靠 translate(-50%,-50%)，不用负 margin——
+   负 margin 是按初始尺寸定的，宽高一变就偏。 */
+.fly {
+  position: fixed;
+  left: 0; top: 0;
+  pointer-events: none;
+  z-index: 60;
+  background: #e6dfcc;
+  box-shadow:
+    inset -3px -3px 0 #b9b09a,
+    inset 3px 3px 0 #fbf7ea,
+    inset 0 0 0 2px #cfc6ac;
+  will-change: transform, opacity;
+}
+
+.sparks { position: fixed; inset: 0; pointer-events: none; z-index: 61; }
+.spark {
+  position: absolute;
+  width: 6px; height: 6px;
+  margin: -3px 0 0 -3px;
+  background: #ffe9a8;
+  will-change: transform, opacity;
+}
+
+/* ---- 页脚 ---------------------------------------------------------------- */
+
+.foot {
+  margin-top: 34px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+  color: var(--ink-faint);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.foot .credit a { color: var(--ink-faint); text-decoration: underline; text-decoration-color: var(--line); }
+.foot .credit a:hover { color: var(--ink-dim); }
+
+/* ---- 窄屏 ---------------------------------------------------------------- */
+
+@media (max-width: 420px) {
+  .app { padding: 14px 13px 32px; }
+  /* 窄屏用方一点的房间：宽度受限时 4/3 只剩很矮的一块墙，气泡就没地方放了 */
+  .stage { aspect-ratio: 1 / 1; }
+  .bubble { max-width: 88%; }
+  .topnav { gap: 13px; }
+}
+
+/* 尊重系统的减弱动效设置。这个产品里动效只是陪伴，不是信息，可以全部关掉。 */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .bubble .ln { opacity: 1; transform: none; }
+}

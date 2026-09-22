@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小情绪收容所</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <a class="brand" href="#" data-nav="house">Claireyy DON'T CRY</a>
+    <nav class="topnav">
+      <a href="#" data-nav="house">小屋</a>
+      <a href="#" data-nav="diary">小情绪</a>
+    </nav>
+  </header>
+
+  <!-- 房间和猫是常驻的：切页面时它们不会消失。一个人是来待一会儿的，
+       不该每换一个功能就看到房间被拆掉一次。 -->
+  <div class="stage" id="stage">
+    <canvas id="room"></canvas>
+    <canvas id="pet"></canvas>
+    <canvas class="bin" id="bin" width="48" height="44" aria-hidden="true"></canvas>
+    <div class="bubble" id="bubble" hidden></div>
+  </div>
+
+  <main class="panel">
+
+    <!-- 1. 小屋 -->
+    <section class="view" id="view-house">
+      <p class="greet" id="greet"></p>
+      <p class="sub">今天过得怎么样？</p>
+      <button class="btn" id="go-bin" type="button">倒掉一点烦恼</button>
+      <p class="whisper" id="house-note"></p>
+    </section>
+
+    <!-- 2. 情绪垃圾桶 -->
+    <section class="view" id="view-bin" hidden>
+      <label class="ask" for="words">今天发生了什么？</label>
+      <textarea id="words" rows="4" placeholder="写下来，或者什么都不写。"></textarea>
+
+      <div class="chips" id="chips" role="group" aria-label="现在的心情">
+        <!-- 由 app.js 填充 -->
+      </div>
+      <p class="hint" id="chip-hint">可以不选。</p>
+
+      <div class="row">
+        <button class="btn" id="throw" type="button">扔进去</button>
+        <button class="link" id="cancel" type="button">先不说了</button>
+      </div>
+    </section>
+
+    <!-- 3. 小情绪天气 / 记录 -->
+    <section class="view" id="view-diary" hidden>
+      <div class="weather" id="weather"></div>
+      <ul class="entries" id="entries"></ul>
+      <p class="whisper" id="diary-note"></p>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span>写下来的东西只留在这台设备上。</span>
+  </footer>
+
+</div>
+
+<!-- 纸团：在视口坐标系里飞，所以不放在 stage 里，否则会被裁掉 -->
+<div class="fly" id="fly" hidden></div>
+<div class="sparks" id="sparks" aria-hidden="true"></div>
+
+<script src="js/vendor/cat-sprite.js"></script>
+<script src="js/vendor/dog-sprite.js"></script>
+<script src="js/daytime.js"></script>
+<script src="js/dialogue.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/room.js"></script>
+<script src="js/critter.js"></script>
+<script src="js/pet.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
