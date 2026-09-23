@@ -436,14 +436,21 @@
     // 下面的输入框）。挂在 stage 上的话，鼠标一离开房间猫就看不见你了。
     // 坐标仍旧换算成「相对房间」的——房间外的位置就是超出边界的数，追鼠标那边会
     // 把它夹进可走范围内。
-    document.addEventListener('mousemove', function (e) {
+    // 用 pointermove 而不是 mousemove：手机上按住拖动只会发 pointer 事件，而
+    // 拖着手指在房间里走正是「追」的那个手势。
+    document.addEventListener('pointermove', function (e) {
       var r = els.stage.getBoundingClientRect();
       PET.cursorAt(e.clientX - r.left, e.clientY - r.top);
     });
     document.addEventListener('keydown', function () { PET.touch(); });
     document.addEventListener('click', function () { PET.touch(); });
-    // 房间这一块（stage 里有房间、猫、垃圾桶、气泡）点一下就再请它说一次
+    // 房间这一块（stage 里有房间、猫、垃圾桶、气泡）点一下就再请它说一次。
+    // 触摸那条路上这个 click 会被画布上的 touchstart preventDefault 吃掉，所以手指
+    // 单独走 pointerup。只认非鼠标，否则桌面上一次点击会跑两遍。
     els.stage.addEventListener('click', fadeBubbleIn);
+    els.stage.addEventListener('pointerup', function (e) {
+      if (e.pointerType !== 'mouse') fadeBubbleIn();
+    });
 
     // 输入框里按 Cmd/Ctrl+Enter 也能扔
     els.words.addEventListener('keydown', function (e) {

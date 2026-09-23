@@ -147,6 +147,15 @@ a:hover { color: var(--warm-lit); }
   overflow: hidden;
   /* 房间四角的暗角，像镜头边缘的光衰减。白天要浅得多，否则亮房间里套着一个黑框 */
   box-shadow: var(--vignette);
+  /* 手机上这整块是「按住猫」的手势区，不是可以滚的正文。
+     touch-action: none 是必须的：默认行为下浏览器一旦把手势认成滚动就会发
+     pointercancel，按住猫拖到一半追手指就断了。user-select / touch-callout /
+     tap-highlight 一并关掉，长按才不会弹出选择菜单或者那层灰色高亮。 */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #room, #pet { position: absolute; inset: 0; width: 100%; height: 100%; }

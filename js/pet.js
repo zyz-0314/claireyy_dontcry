@@ -960,11 +960,15 @@
       window.CRITTER.mount(canvas);
 
       // 点击互动。只有落在猫身上才算数——点房间的空处什么都不发生。
-      // mouseup 挂在 window 上而不是画布上：按着猫拖出画布再松手也收得住。
-      canvas.addEventListener('mousedown', function (e) {
+      // 用 pointer 事件而不是 mouse：手指按在屏幕上不动是不会发 mouse 事件的，而
+      // 这间屋子的「按住」本身就是触摸时的常态。pointerup / pointercancel 挂在
+      // window 上而不是画布上：按着猫拖出画布再松手也收得住。
+      canvas.addEventListener('pointerdown', function (e) {
         if (e.button !== 0) return;
         var r = canvas.getBoundingClientRect();
         handDown = true;                 // 按在房间里的任何地方都算「按住了」（拖动要用来追）
+        PET.touch();                     // 唤醒原本挂在 document 的 click 上，触摸时那个 click
+                                         // 会被下面 touchstart 的 preventDefault 吃掉，这里补回来
         handOnCat = catHit(e.clientX - r.left, e.clientY - r.top);
         if (!handOnCat) return;          // 按在空处：先什么都不做，拖动起来才追
         lastActivity = now();
@@ -972,12 +976,24 @@
         reactUntil = now() + REACT_MS;
         tailFlickT0 = now();
       });
-      canvas.addEventListener('mousemove', function (e) {
+      canvas.addEventListener('pointermove', function (e) {
+        if (e.pointerType !== 'mouse') return;   // 手指没有「悬停」，别去猜光标形状
         var r = canvas.getBoundingClientRect();
         // 不给这个提示就没谁知道猫是可以点的：它没有按钮的样子，也没有文字
         canvas.style.cursor = catHit(e.clientX - r.left, e.clientY - r.top) ? 'pointer' : '';
       });
-      window.addEventListener('mouseup', function () { handDown = false; handOnCat = false; });
+      // 松手、或者手势被浏览器接管（pointercancel）都要把「手」放下，否则猫会一直
+      // 以为你还按着它。
+      function handOff() { handDown = false; handOnCat = false; }
+      window.addEventListener('pointerup', handOff);
+      window.addEventListener('pointercancel', handOff);
+
+      // 手机上长按这块会弹出浏览器自己的菜单（标记广告 / 页面内查找），按住摸猫根本
+      // 没机会跑。把画布上的默认触摸行为整个关掉。
+      // 挂在画布而不是 stage 上：气泡里那个「×」是块真按钮，别把它的点击也一起吃了。
+      // 滚动 / 选择的关闭在 css 里（见 .stage 的 touch-action）。
+      canvas.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
+      canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
       return PET;
     },
